@@ -21,106 +21,124 @@ from django.utils.decorators import method_decorator
 
 @login_required(login_url='/login/')
 def index(request):
-    return render(request, 'index.html')
+    try:
+        return render(request, 'index.html')
+    except Exception as err:
+        print('err at index ', err)
 
 @login_required(login_url='/login/')
 def upload_data(request):
-    form = UploadFileDataForm()
-    return render(request, 'upload_data.html', {'form':form})
+    try:
+        form = UploadFileDataForm()
+        return render(request, 'upload_data.html', {'form':form})
+    except Exception as err:
+        print('err at upload_data ', err)
 
 
 @method_decorator(login_required, name='dispatch')
 class UploadFileData(View):
     def get(self, request):
-        form = UploadFileDataForm()
-        return render(request, 'upload_data.html', {'form':form})
+        try:
+            form = UploadFileDataForm()
+            return render(request, 'upload_data.html', {'form':form})
+        except Exception as err:
+            print('err at UploadFileData ', err)
     
     def post(self, request):
-        form = UploadFileDataForm(request.POST, request.FILES)
-        if form.is_valid():
-            CompanyData.objects.all().delete()
-            uploaded_file = form.cleaned_data['file']
+        try:
+            form = UploadFileDataForm(request.POST, request.FILES)
+            if form.is_valid():
+                CompanyData.objects.all().delete()
+                uploaded_file = form.cleaned_data['file']
 
-            # file_content = uploaded_file.read().decode('utf-8').splitlines()
-            # reader = csv.DictReader(file_content)
+                # file_content = uploaded_file.read().decode('utf-8').splitlines()
+                # reader = csv.DictReader(file_content)
 
-            file_data = TextIOWrapper(uploaded_file.file, encoding='ISO-8859-1')
+                file_data = TextIOWrapper(uploaded_file.file, encoding='ISO-8859-1')
 
-            my_df = pd.read_csv(file_data)
-            df = my_df.dropna()
+                my_df = pd.read_csv(file_data)
+                df = my_df.dropna()
 
 
-            company_data_instances = [
-                CompanyData(
-                    name=row['name'],
-                    domain=row['domain'],
-                    year_founded=int(row['year founded']) if pd.notnull(row['year founded']) else None,
-                    industry=row['industry'],
-                    size_range=row['size range'],
-                    locality=row['locality'],
-                    country=row['country'],
-                    linkedin_url=row['linkedin url'],
-                    current_employee_estimate=int(row['current employee estimate']) if pd.notnull(
-                        row['current employee estimate']) else None,
-                    total_employee_estimate=int(row['total employee estimate']) if pd.notnull(
-                        row['total employee estimate']) else None,
-                )
-                for index, row in df.iterrows()
-            ]
+                company_data_instances = [
+                    CompanyData(
+                        name=row['name'],
+                        domain=row['domain'],
+                        year_founded=int(row['year founded']) if pd.notnull(row['year founded']) else None,
+                        industry=row['industry'],
+                        size_range=row['size range'],
+                        locality=row['locality'],
+                        country=row['country'],
+                        linkedin_url=row['linkedin url'],
+                        current_employee_estimate=int(row['current employee estimate']) if pd.notnull(
+                            row['current employee estimate']) else None,
+                        total_employee_estimate=int(row['total employee estimate']) if pd.notnull(
+                            row['total employee estimate']) else None,
+                    )
+                    for index, row in df.iterrows()
+                ]
 
-            with transaction.atomic():
-                CompanyData.objects.bulk_create(company_data_instances)
-            
-            messages.success(request, "File Uploaded Succesfully you can query filter")
-            return redirect('/query-builder/')
+                with transaction.atomic():
+                    CompanyData.objects.bulk_create(company_data_instances)
+                
+                messages.success(request, "File Uploaded Succesfully you can query filter")
+                return redirect('/query-builder/')
 
-        else:
-            form.add_error('file', 'Invalid file format or file size exceeds limit.')
-        return render(request, 'upload_data.html', {'form': form})
+            else:
+                form.add_error('file', 'Invalid file format or file size exceeds limit.')
+            return render(request, 'upload_data.html', {'form': form})
+        except Exception as err:
+            print('err at UploadFileData ', err)
 
 @login_required(login_url='/login/')
 def query_builder(request, my_flg=False):
-    queryset = CompanyData.objects.all()
+    try:
+        queryset = CompanyData.objects.all()
 
-    if request.method == 'POST':
-        form = FilterForm(request.POST)
-        if form.is_valid():
-            industry = form.cleaned_data.get('industry')
-            city = form.cleaned_data.get('city')
-            state = form.cleaned_data.get('state')
-            country = form.cleaned_data.get('country')
+        if request.method == 'POST':
+            form = FilterForm(request.POST)
+            if form.is_valid():
+                industry = form.cleaned_data.get('industry')
+                city = form.cleaned_data.get('city')
+                state = form.cleaned_data.get('state')
+                country = form.cleaned_data.get('country')
 
-            if industry:
-                queryset = queryset.filter(industry=industry)
-            if city:
-                queryset = queryset.filter(locality=city)
-            if state:
-                queryset = queryset.filter(state=state)
-            if country:
-                queryset = queryset.filter(country=country)
+                if industry:
+                    queryset = queryset.filter(industry=industry)
+                if city:
+                    queryset = queryset.filter(locality=city)
+                if state:
+                    queryset = queryset.filter(state=state)
+                if country:
+                    queryset = queryset.filter(country=country)
 
-            count = queryset.count()
+                count = queryset.count()
+            else:
+                count = 0
+            messages.success(request, f"{count} records found for the query")
+
+
         else:
+            form = FilterForm()
             count = 0
-        messages.success(request, f"{count} records found for the query")
 
-
-    else:
-        form = FilterForm()
-        count = 0
-
-    return render(request, 'query_builder.html', {
-        'form': form,
-        'count': count,
-    })
+        return render(request, 'query_builder.html', {
+            'form': form,
+            'count': count,
+        })
+    except Exception as err:
+        print('err at query_builder ', err)
 
 
 
 
 @login_required(login_url='/login/')
 def users_info(request):
-    user_data = User.objects.all()
-    return render(request, 'users_info.html', {'user_data':user_data})
+    try:
+        user_data = User.objects.all()
+        return render(request, 'users_info.html', {'user_data':user_data})
+    except Exception as err:
+        print('err at users_info ', err)
 
 
 
@@ -130,7 +148,7 @@ class CustomerRegistrationView(View):
             form = UserRegistrationForm()
             return render(request, 'signup.html', {'form':form})
         except Exception as err:
-            print(err)
+            print('err at CustomerRegistrationView ', err)
 
     def post(self, request):
         try:
@@ -140,11 +158,14 @@ class CustomerRegistrationView(View):
                 form.save()
             return render(request, 'signup.html', {'form':form})
         except Exception as err:
-            print(err)
+            print('err at CustomerRegistrationView ', err)
 
 
 @login_required(login_url='/login/')
 def logoutUser(request):
-    logout(request)
-    messages.success(request, "Logout Successfully")
-    return redirect('/login')
+    try:
+        logout(request)
+        messages.success(request, "Logout Successfully")
+        return redirect('/login')
+    except Exception as err:
+        print('err at logoutUser ', err)
