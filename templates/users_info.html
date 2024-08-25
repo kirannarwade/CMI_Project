@@ -3,6 +3,31 @@
 {% block title %}Users{% endblock title %}
 
 {% block body %}
-users info
+<div class="container">
+    <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Username</th>
+            <th scope="col">Email</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for usr in user_data %}
+                
+          <tr>
+            <th scope="row">{{usr.pk}}</th>
+            <td>{{usr.username}}</td>
+            <td>{{usr.email}}</td>
+            <td>{{usr.is_active}}</td>
+          </tr>
+          {% endfor %}
+
+  
+ 
+        </tbody>
+      </table>
+</div>
     
 {% endblock body %}

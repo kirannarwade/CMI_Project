@@ -5,4 +5,5 @@ from .models import CompanyData
 
 @admin.register(CompanyData)
 class CompanyDataAdmin(admin.ModelAdmin):
-    list_display = ['id' ,'name', 'domain', 'year_founded', 'industry']
+    # list_display = ['id' ,'name', 'domain', 'year_founded', 'industry']
+    list_display = [field.name for field in CompanyData._meta.fields]

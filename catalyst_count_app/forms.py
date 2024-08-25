@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, User
 from django.contrib.auth.models import User
 from django.utils.translation import gettext, gettext_lazy as _
 from django.core.exceptions import ValidationError
-
+from .models import CompanyData
 
 class UserRegistrationForm(UserCreationForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput(attrs={'class':'form-control', 'placeholder':'Password'}))
@@ -54,3 +54,21 @@ class UploadFileDataForm(forms.Form):
 
         return uploaded_file
 
+
+
+
+
+class FilterForm(forms.Form):
+    industry = forms.ChoiceField(choices=[], widget=forms.Select(attrs={'class': 'form-control'}))  # Placeholder for dynamic choices
+    city = forms.ChoiceField(choices=[], widget=forms.Select(attrs={'class': 'form-control'}))
+    year_founded = forms.ChoiceField(choices=[], widget=forms.Select(attrs={'class': 'form-control'}))
+    country = forms.ChoiceField(choices=[], widget=forms.Select(attrs={'class': 'form-control'}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Populate choices dynamically
+        self.fields['industry'].choices = [(x, x) for x in CompanyData.objects.values_list('industry', flat=True).distinct()]
+        self.fields['city'].choices = [(x, x) for x in CompanyData.objects.values_list('locality', flat=True).distinct()]
+        self.fields['year_founded'].choices = [(x, x) for x in CompanyData.objects.values_list('year_founded', flat=True).distinct()]
+        self.fields['country'].choices = [(x, x) for x in CompanyData.objects.values_list('country', flat=True).distinct()]
